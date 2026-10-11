@@ -42,6 +42,7 @@ function getClientLocalFallback(location, period, summary) {
     success: true,
     source: 'calculated_client',
     badge: 'Calculated from data',
+    isFallback: true,
     note: 'Backend insights service unreachable. Insights computed locally from NASA POWER observations.',
     insights,
   };
@@ -67,7 +68,21 @@ export async function fetchClimateInsights({ location, period, summary }) {
         headers: { 'Content-Type': 'application/json' },
       }
     );
-    return response.data;
+
+    // Validate that the backend returned a successful insights response
+    if (
+      response.data &&
+      response.data.success &&
+      Array.isArray(response.data.insights) &&
+      response.data.insights.length > 0
+    ) {
+      return {
+        ...response.data,
+        isFallback: false,
+      };
+    }
+
+    throw new Error(response.data?.error || 'Invalid insights payload structure');
   } catch (err) {
     // If backend is down or network fails, return client-side calculated fallback
     console.warn('Backend /api/insights unreachable, using client-side fallback:', err.message);

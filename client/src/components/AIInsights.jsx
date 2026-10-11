@@ -27,8 +27,11 @@ export default function AIInsights({ insightsData, loading, onRefresh }) {
     return null;
   }
 
-  const { source, badge, note, disclaimer, insights } = insightsData;
+  const { source, badge, note, disclaimer, insights, isFallback } = insightsData;
   const isAI = source === 'ai';
+  // Connection failure warning should ONLY display when the backend request actually failed,
+  // timed out, or returned an invalid payload (client-side fallback mode)
+  const isConnectionFailure = isFallback === true || source === 'calculated_client';
 
   return (
     <div className={`insights-card ${isAI ? 'ai-insights-theme' : 'calc-insights-theme'}`}>
@@ -63,7 +66,7 @@ export default function AIInsights({ insightsData, loading, onRefresh }) {
         </div>
       </div>
 
-      {note && (
+      {isConnectionFailure && note && (
         <div className="insights-status-note">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <circle cx="12" cy="12" r="10" />
