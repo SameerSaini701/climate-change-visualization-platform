@@ -7,9 +7,12 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const HOST = '0.0.0.0';
 
 // Security Middleware & CORS configuration
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 
 const defaultOrigins = [
   'http://localhost:5173',
@@ -162,7 +165,7 @@ app.get('/', (req, res) => {
  * Generates climate insights for the active dashboard selection.
  * Uses Gemini when configured, with seamless, honest fallback to calculated insights.
  */
-app.post('/api/insights', async (req, res) => {
+app.post(['/api/insights', '/api/insights/'], async (req, res) => {
   const { location, period, summary } = req.body || {};
 
   // Input Validation
@@ -266,7 +269,7 @@ STRICT RULES:
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Climate Platform Server running on http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`Climate Platform Server running on http://${HOST}:${PORT}`);
   console.log(`Gemini API configured: ${isGeminiKeyConfigured() ? 'Yes (Live)' : 'No (Using calculated data fallback)'}`);
 });
