@@ -1,6 +1,18 @@
 import axios from 'axios';
 
-const BACKEND_INSIGHTS_URL = 'http://localhost:5000/api/insights';
+/**
+ * Backend API Base URL:
+ * Resolves to Vite environment variable VITE_API_BASE_URL (configured on Vercel/production)
+ * or falls back safely to 'http://localhost:5000' for local development.
+ * Automatically trims trailing slashes to prevent malformed double slashes.
+ */
+const API_BASE_URL = (
+  (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_BASE_URL)
+    ? import.meta.env.VITE_API_BASE_URL
+    : 'http://localhost:5000'
+).replace(/\/+$/, '');
+
+const BACKEND_INSIGHTS_URL = `${API_BASE_URL}/api/insights`;
 
 /**
  * Client-side fallback if backend server is unreachable.
@@ -30,7 +42,7 @@ function getClientLocalFallback(location, period, summary) {
     success: true,
     source: 'calculated_client',
     badge: 'Calculated from data',
-    note: 'Backend server not detected on port 5000. Insights computed locally from NASA POWER observations.',
+    note: 'Backend insights service unreachable. Insights computed locally from NASA POWER observations.',
     insights,
   };
 }

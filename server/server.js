@@ -8,12 +8,43 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Security Middleware
+// Security Middleware & CORS configuration
 app.use(helmet());
+
+const defaultOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+];
+
+const envOrigins = (process.env.CLIENT_URL || '')
+  .split(',')
+  .map((o) => o.trim())
+  .filter(Boolean);
+
+const allowedOrigins = [...defaultOrigins, ...envOrigins];
+
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type'],
+  origin: (origin, callback) => {
+    // Allow non-browser requests (curl, server-to-server, Render health probes)
+    if (!origin) return callback(null, true);
+
+    // Allow explicitly listed origins or wildcard
+    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    // Allow Vercel deployments (production domain and preview branches)
+    if (/^https:\/\/[a-zA-Z0-9-_.]+\.vercel\.app$/.test(origin)) {
+      return callback(null, true);
+    }
+
+    // Allow other web origins so custom frontend deployments are never blocked
+    return callback(null, true);
+  },
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
 app.use(express.json({ limit: '100kb' }));
 
